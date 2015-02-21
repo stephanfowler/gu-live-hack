@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style>
+        body { font-family: Arial; overflow: hidden; }
+        .items { 
+            font-size: 14px;
+            line-height: 27px;
+            list-style-type: none;
+            padding: 0;
+            position: relative;
+            height: 390px;
+            overflow: hidden;
+        }
+        .items .item { 
+            box-sizing: border;
+            width: 100%;
+            padding-left: 5px;
+            border-top: 1px solid #ddd;
+            background: #fff;
+            margin-bottom: 3px;
+            overflow: hidden;
+            white-space: nowrap;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: all 0.5s;
+        }
+        .items .item.new {
+            color: #fff;
+            background: #1c6326;
+        }
+        .items .item.hot {
+            color: #fff;
+            background: #e6711b;
+        }
+    </style>
+    <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+    <script src="libs/lodash.js"></script>
+</head>
+<body>
+    <ul class="items"></ul>
+
+    <button class="append">Add item</button> 
+
+    <!--[if lte IE 9]><style type="text/css">
+    /* Old IE doesn't support CSS transform or transitions */
+    .items .item { position: relative }
+    </style><![endif]-->
+
+    <script>
+        $(function() {
+            var content = [
+              {
+                "webTitle": "Manchester City v Newcastle United: Premier League - live! | Nick Ames",
+                "webPublicationDate": "2015-02-21T19:11:53Z",
+                "sectionId": "football",
+                "id": "football/live/2015/feb/21/manchester-city-v-newcastle-premier-league-live",
+                "webUrl": "http://www.theguardian.com/football/live/2015/feb/21/manchester-city-v-newcastle-premier-league-live",
+                "apiUrl": "http://content.guardianapis.com/football/live/2015/feb/21/manchester-city-v-newcastle-premier-league-live",
+                "sectionName": "Football"
+              },
+              {
+                "id": "us-news/2015/feb/21/scott-walker-rudy-giuliani-obama-loves-america",
+                "sectionId": "us-news",
+                "webPublicationDate": "2015-02-21T19:06:41Z",
+                "webTitle": "Scott Walker sidesteps question on Giuliani remarks about Obama",
+                "webUrl": "http://www.theguardian.com/us-news/2015/feb/21/scott-walker-rudy-giuliani-obama-loves-america",
+                "apiUrl": "http://content.guardianapis.com/us-news/2015/feb/21/scott-walker-rudy-giuliani-obama-loves-america",
+                "sectionName": "US news"
+              },
+              {
+                "webTitle": "Scottish roundup: Tope Obadeyi’s strike denies Inverness home win",
+                "webPublicationDate": "2015-02-21T19:00:33Z",
+                "sectionId": "football",
+                "id": "football/2015/feb/21/inverness-dundee-united-hearts-scottish-premiership-championship",
+                "webUrl": "http://www.theguardian.com/football/2015/feb/21/inverness-dundee-united-hearts-scottish-premiership-championship",
+                "apiUrl": "http://content.guardianapis.com/football/2015/feb/21/inverness-dundee-united-hearts-scottish-premiership-championship",
+                "sectionName": "Football"
+              },
+              {
+                "webTitle": "Labour to give John Prescott a frontline general election role",
+                "webPublicationDate": "2015-02-21T19:00:03Z",
+                "sectionId": "politics",
+                "id": "politics/2015/feb/21/labour-john-prescott-election-miliband-conservatives",
+                "webUrl": "http://www.theguardian.com/politics/2015/feb/21/labour-john-prescott-election-miliband-conservatives",
+                "apiUrl": "http://content.guardianapis.com/politics/2015/feb/21/labour-john-prescott-election-miliband-conservatives",
+                "sectionName": "Politics"
+              },
+              {
+                "webTitle": "Daily Telegraph provokes fresh outrage over reporting of ‘suicides’ at News UK",
+                "webPublicationDate": "2015-02-21T18:50:23Z",
+                "sectionId": "media",
+                "id": "media/2015/feb/21/daily-telegraph-outrage-reporting-suicides-news-uk",
+                "webUrl": "http://www.theguardian.com/media/2015/feb/21/daily-telegraph-outrage-reporting-suicides-news-uk",
+                "apiUrl": "http://content.guardianapis.com/media/2015/feb/21/daily-telegraph-outrage-reporting-suicides-news-uk",
+                "sectionName": "Media"
+              },
+              {
+                "webTitle": "Football League: your thoughts | Alan Smith",
+                "webPublicationDate": "2015-02-21T18:38:30Z",
+                "sectionId": "football",
+                "id": "football/football-league-blog/2015/feb/21/football-league-your-thoughts",
+                "webUrl": "http://www.theguardian.com/football/football-league-blog/2015/feb/21/football-league-your-thoughts",
+                "apiUrl": "http://content.guardianapis.com/football/football-league-blog/2015/feb/21/football-league-your-thoughts",
+                "sectionName": "Football"
+              },
+              {
+                "webTitle": "Super-jails are the inhumane mark of ignorant politicians | Nick Cohen",
+                "webPublicationDate": "2015-02-21T18:15:02Z",
+                "sectionId": "commentisfree",
+                "id": "commentisfree/2015/feb/21/super-jails-inhumane-mark-ignorant-politicians",
+                "webUrl": "http://www.theguardian.com/commentisfree/2015/feb/21/super-jails-inhumane-mark-ignorant-politicians",
+                "apiUrl": "http://content.guardianapis.com/commentisfree/2015/feb/21/super-jails-inhumane-mark-ignorant-politicians",
+                "sectionName": "Comment is free"
+              },
+              {
+                "webTitle": "Harlequins 21-32 Exeter | Aviva Premiership match report",
+                "webPublicationDate": "2015-02-21T18:13:51Z",
+                "sectionId": "sport",
+                "id": "sport/2015/feb/21/harlequins-exeter-premiership-match-report",
+                "webUrl": "http://www.theguardian.com/sport/2015/feb/21/harlequins-exeter-premiership-match-report",
+                "apiUrl": "http://content.guardianapis.com/sport/2015/feb/21/harlequins-exeter-premiership-match-report",
+                "sectionName": "Sport"
+              },
+              {
+                "webTitle": "Horse racing tips: Sunday 22 February",
+                "webPublicationDate": "2015-02-21T18:05:47Z",
+                "sectionId": "sport",
+                "id": "sport/2015/feb/21/horse-racing-tips-sunday-22-february",
+                "webUrl": "http://www.theguardian.com/sport/2015/feb/21/horse-racing-tips-sunday-22-february",
+                "apiUrl": "http://content.guardianapis.com/sport/2015/feb/21/horse-racing-tips-sunday-22-february",
+                "sectionName": "Sport"
+              },
+              {
+                "webTitle": "Fewer Brits are visiting our top galleries – should we be worried?",
+                "webPublicationDate": "2015-02-21T18:00:02Z",
+                "sectionId": "commentisfree",
+                "id": "commentisfree/2015/feb/21/gallery-visitors-fall-tate-national-gallery",
+                "webUrl": "http://www.theguardian.com/commentisfree/2015/feb/21/gallery-visitors-fall-tate-national-gallery",
+                "apiUrl": "http://content.guardianapis.com/commentisfree/2015/feb/21/gallery-visitors-fall-tate-national-gallery",
+                "sectionName": "Comment is free"
+              }
+            ];
+
+            var templateRow = _.template('<div class="item">' +
+                    '<%= headline %> <button class="up">^</button>  <button class="delete">x</button>' +
+                '</div>');
+
+            function generateInitial(content) {
+                $('.items').html(
+                    _.chain(content)
+                        .map(function(c) {
+                            return templateRow({headline: c.webTitle});
+                        })
+                        .value()
+                        .join('')
+                )
+            }
+
+            function getList() {
+                return document.querySelectorAll('.items .item');
+            }
+
+            function reRender() {
+                setTimeout(setTops, 0);
+                setTimeout(setZindexes, 500);
+                clearStates();
+            }
+
+            function setTops() {
+                _.chain(getList()).forEach(function(el, i) {
+                    $(el).css('top', i * 27 );
+                }).value();
+            }
+
+            function setZindexes() {
+                _.chain(getList()).forEach(function(el, i) {
+                    $(el).css('z-index', i + 10);
+                }).value();
+            }
+
+            var clearStates = function() {
+                clearStates = _.debounce(function() {
+                    _.chain(getList()).forEach(function(el, i) {
+                        $(el).removeClass('new').removeClass('hot');
+                    }).value()
+                }, 2000);
+                clearStates();
+            }
+
+            generateInitial(content);
+            setTops();
+            setZindexes();
+
+            $(document.body).on("click", ".delete", function (evt) {
+                $(this).closest(".item").remove();
+                reRender();
+            });
+            
+            $(document.body).on("click", ".up", function (evt) {
+                $(this).closest(".item").addClass('hot').detach().prependTo(".items");
+                reRender();
+            });
+            
+            $(".append").click(function () {
+                $(templateRow({headline: 'Foo bar explodes'})).addClass('new').insertBefore($(".items").children()[_.random(0, 5)]);
+                reRender();
+            });
+
+            // Workaround for Webkit bug: force scroll height to be recomputed after the transition ends, not only when it starts
+            $(".items").on("webkitTransitionEnd", function () {
+                $(this).hide().offset();
+                $(this).show();
+            });
+        });
+    </script>
+</body>
+</html>
