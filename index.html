@@ -108,12 +108,12 @@
                 var defer = new $.Deferred();;
 
                 $.ajax({
-                   url: 'http://content.guardianapis.com/search?api-key=test&show-tags=all&page-size=12',
+                   url: 'http://content.guardianapis.com/search?api-key=test&show-tags=all&page-size=14',
                    dataType:'jsonp'
                 }).done(function(results) {
                     results = results.response.results;
                     results = _.shuffle(results);
-                    defer.resolve(results.slice(0, 10));
+                    defer.resolve(results.slice(0, 12));
                 });
                 return defer.promise();
             }
