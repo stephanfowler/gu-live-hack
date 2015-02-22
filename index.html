@@ -18,21 +18,25 @@
             overflow: hidden;
             white-space: nowrap;
             position: absolute;
+            top: -27px;
             left: 0;
             transition: all 1s ease-in-out;
             color: #000;
         }
         .items div.new {
-            color: #fff;
-            background: #1c6326;
+            background: #C5E1A5;
         }
         .items div.rising {
-            color: #fff;
-            background: #e6711b;
+            background: #FFD180;
         }
-        .items div.falling {
+        .items div a {
+            color: #000;
+            text-decoration: none;
+        }
+        .items div.falling a {
             color: #999;
         }
+
     </style>
     <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
     <script src="libs/lodash.js"></script>
@@ -47,33 +51,33 @@
 
     <script>
         $(function() {
-            var template = _.template('<div id="<%= id %>"><%= webTitle %></div>'),
+            var template = _.template('<div id="<%= id %>"><a href="<%= webUrl %>"><%= webTitle %></a></div>'),
                 $items = $(".items");
 
-            function generateInitial(content) {
-                $items.html(content.map(template).join(''))
-                return getList();
+            function render(content) {
+                if (content) {
+                    $items.html(content.map(template).join(''));
+                    setPositions(getDomList());
+                }
             }
 
-            function getList() {
+            function getDomList() {
                 return _.map($('div', $items));
             }
 
-            function getMap() {
-                return _.reduce(getList(), function(map, el, i) {
+            function getDomMap() {
+                return _.reduce(getDomList(), function(domMap, el, i) {
                     el.position = i;
-                    map[el.id] = el;
-                    return map;
+                    domMap[el.id] = el;
+                    return domMap;
                 }, {});
             }
 
-            function tidyUp(list) {
-                setTimeout(function() {
-                    list.forEach(function(el, i) {
-                        clearClasses(el);
-                        setZindex(el, i)
-                    })
-                }, 2000);
+            function prepareDom() {
+                getDomList().forEach(function(el, i) {
+                    clearClasses(el);
+                    setZindex(el, i)
+                })
             }
 
             function setPosition(el, i) {
@@ -98,32 +102,54 @@
                 $(this).show();
             });
 
-            function getContent() {
+            function simplify(article) {
+                return _.pick(article, ['id', 'webTitle', 'webUrl', 'tags']);
+            }
+
+            function loadList() {
+                var state = window.localStorage.getItem('gu.live.state');
+
+                state = state && JSON.parse(state);
+                state = _.isArray(state) && state;
+                return state;
+            }
+
+            function saveList(list) {
+                window.localStorage.setItem('gu.live.state', JSON.stringify(list));
+            }
+
+            function fetchList() {
                 var defer = new $.Deferred();;
 
                 $.ajax({
                    url: 'http://content.guardianapis.com/search?api-key=test&show-tags=all&page-size=14',
                    dataType:'jsonp'
-                }).done(function(results) {
-                    results = results.response.results;
-                    results = _.shuffle(results);
-                    defer.resolve(results.slice(0, 12));
+                }).done(function(data) {
+                    var list = data.response.results;
+
+                    list = _.shuffle(list);
+                    defer.resolve(list.slice(0, 12).map(simplify));
                 });
+
                 return defer.promise();
             }
 
             function init() {
-                getContent().done(function(results) {
-                    var map = getMap(),
+                render(loadList());
+
+                fetchList().done(function(list) {
+                    var domMap = getDomMap(),
                         version = new Date().getTime();
 
-                    if (_.isEmpty(map)) {
-                        setPositions(generateInitial(results));
+                    if (_.isEmpty(domMap)) {
+                        render(list);
 
                     } else {
-                       _.chain(results)
+                        prepareDom();
+
+                        _.chain(list)
                             .forEach(function(article, index) {
-                                var el = map[article.id];
+                                var el = domMap[article.id];
 
                                 if (!el) {
                                     el = $(template(article)).addClass('new').appendTo($items)                                    
@@ -133,24 +159,26 @@
                                     $(el).addClass('falling');
                                 }
                                 el.version = version;
-                                setPosition(el, index);
+                                setTimeout(function() {
+                                    setPosition(el, index)
+                                }, 0);
                             })
                             .value();
 
-                        _.chain(map)
+                        _.chain(domMap)
                             .forEach(function(el, id) {
                                 if (el.version !== version) {
                                     $(el).remove();
+                                    delete domMap[id];
                                 }
                             })
                             .value();
                     }
 
-                    tidyUp(getList());
+                    saveList(list);
                 });
             }
 
-            setTimeout(init, 4000);
             init();
         });
     </script>
