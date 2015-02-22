@@ -13,7 +13,7 @@
             height: 390px;
             overflow: hidden;
         }
-        .items .item { 
+        .items div { 
             box-sizing: border;
             width: 100%;
             padding-left: 5px;
@@ -28,13 +28,16 @@
             transition: all 0.5s;
             color: #000;
         }
-        .items .item.new {
+        .items div.new {
             color: #fff;
             background: #1c6326;
         }
-        .items .item.rising {
+        .items div.rising {
             color: #fff;
             background: #e6711b;
+        }
+        .items div.falling {
+            color: #999;
         }
     </style>
     <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
@@ -42,40 +45,39 @@
 </head>
 <body>
     <ul class="items"></ul>
-    <button class="reload">Reload</button> 
 
     <!--[if lte IE 9]><style type="text/css">
     /* Old IE doesn't support CSS transform or transitions */
-    .items .item { position: relative }
+    .items div { position: relative }
     </style><![endif]-->
 
     <script>
         $(function() {
-            var template = _.template('<div class="item" id="<%= id %>""><%= webTitle %></div>');
+            var template = _.template('<div id="<%= id %>"><%= webTitle %></div>'),
+                $items = $(".items");
 
             function generateInitial(content) {
-                $('.items').html(content.map(template).join(''))
+                $items.html(content.map(template).join(''))
                 return getList();
             }
 
             function getList() {
-                return _.map(document.querySelectorAll('.items .item'));
+                return _.map($('div', $items));
             }
 
             function getMap() {
-                return _.reduce(document.querySelectorAll('.items .item'), function(map, el) {
+                return _.reduce(getList(), function(map, el, i) {
+                    el.position = i;
                     map[el.id] = el;
                     return map;
                 }, {});
             }
 
             function tidyUp(list) {
-                setTimeout(function () {
-                    list.forEach(setZindex);
-                }, 500);
                 setTimeout(function() {
-                    list.forEach(function(el) {
-                        $(el).attr('class', 'item');
+                    list.forEach(function(el, i) {
+                        clearClasses(el);
+                        setZindex(el, i)
                     })
                 }, 2000);
             }
@@ -89,32 +91,23 @@
             }
 
             function setZindex(el, i) {
-                $(el).css('z-index', i + 10);
+                $(el).css('z-index', i + 1);
+            }
+
+            function clearClasses(el) {
+                $(el).removeClass();
             }
 
             // Workaround for Webkit bug: force scroll height to be recomputed after the transition ends, not only when it starts
-            $(".items").on("webkitTransitionEnd", function () {
+            $items.on("webkitTransitionEnd", function () {
                 $(this).hide().offset();
                 $(this).show();
             });
-
-            function add(article, position) {
-                $(template(article))
-                    .addClass('new')
-                    .insertBefore($(".items").children()[position || 0]);
-            }
-
-            function move(article, from, to) {
-                var list = getList();
-
-                $(list[from]).addClass(from > to ? 'rising' : 'falling').detach().insertBefore(list[to]);
-            }
 
             function getContent() {
                 var defer = new $.Deferred();;
 
                 $.ajax({
-                   type:'GET',
                    url: 'http://content.guardianapis.com/search?api-key=test&show-tags=all&page-size=12',
                    dataType:'jsonp'
                 }).done(function(results) {
@@ -125,55 +118,46 @@
                 return defer.promise();
             }
 
-            var idsOld;
-
             function init() {
                 getContent().done(function(results) {
-                    var els,
-                        map;
+                    var map = getMap(),
+                        version = new Date().getTime();
 
-                    if (!idsOld) {
+                    if (_.isEmpty(map)) {
                         setPositions(generateInitial(results));
 
                     } else {
-                        idsNew = _.pluck(results, 'id');
-                        map = getMap();
-
-                        _.chain(map)
-                            .forEach(function(el, id) {
-                                if (idsNew.indexOf(id) === -1) {
-                                    delete map[id];
-                                    $(el).remove();
-                                }
-                            })
-                            .value();
-
-                        els = _.chain(results)
-                            .forEachRight(function(article, index) {
+                       _.chain(results)
+                            .forEach(function(article, index) {
                                 var el = map[article.id];
 
                                 if (!el) {
-                                    el = $(template(article)).addClass('new').prependTo($(".items"))                                    
-                                } else if (index < idsOld.indexOf(article.id)) {
+                                    el = $(template(article)).addClass('new').appendTo($items)                                    
+                                } else if (index < el.position) {
                                     $(el).addClass('rising');
+                                } else if (index > el.position) {
+                                    $(el).addClass('falling');
                                 }
-
+                                el.version = version;
                                 setPosition(el, index);
+                            })
+                            .value();
+
+                        _.chain(map)
+                            .forEach(function(el, id) {
+                                if (el.version !== version) {
+                                    $(el).remove();
+                                }
                             })
                             .value();
                     }
 
                     tidyUp(getList());
-                    idsOld = _.pluck(results, 'id');
                 });
             }
 
-            $(".reload").click(function () {
-                init();
-            });
-
+            setInterval(init, 4000);
             init();
-
         });
     </script>
 </body>
