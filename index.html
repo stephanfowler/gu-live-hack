@@ -55,8 +55,18 @@
     </style><![endif]-->
 
     <script>
-        var template = _.template('<div id="<%= id %>"><a href="<%= webUrl %>"><%= webTitle %></a></div>'),
-            $items = $(".items");
+        var capi = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=10',
+            template = _.template('<div id="<%= id %>"><a href="<%= webUrl %>"><%= webTitle %></a></div>'),
+            $items = $(".items"),
+
+            useShaphots = window.location.hash === "#snapshots",
+            snaphotBase = 'http://stephanfowler.com/gu-live-hack/snapshotter/data/',
+            snaphotMin = 100,
+            snaphotMax = 110,
+            snaphotCount = 0,
+
+            storageKeyState = 'gu.live.state',
+            storageKeySnapshotCount = 'gu.live.snapshotCount';
 
         function getDomList() {
             return _.map($('div', $items));
@@ -100,7 +110,7 @@
         }
 
         function loadList() {
-            var state = window.localStorage.getItem('gu.live.state');
+            var state = window.localStorage.getItem(storageKeyState);
 
             state = state && JSON.parse(state);
             state = _.isArray(state) && state;
@@ -108,31 +118,37 @@
         }
 
         function saveList(list) {
-            window.localStorage.setItem('gu.live.state', JSON.stringify(list));
+            window.localStorage.setItem(storageKeyState, JSON.stringify(list));
         }
 
-        function clone(obj) {
-            return JSON.parse(JSON.stringify(obj));
+        function loadSnapshoCount() {
+            var count = window.localStorage.getItem(storageKeySnapshotCount) || 0;
+            return parseInt(count, 10);
+        }
+
+        function saveSnapshoCount(count) {
+            window.localStorage.setItem(storageKeySnapshotCount, count + '');
         }
 
         function fetchList() {
-            var defer = new $.Deferred();;
+            var defer = new $.Deferred(),
+                url = capi;
+
+            if (useShaphots) {
+                url = snaphotBase + (snaphotMin + snaphotCount);
+                snaphotCount += 1;
+                snaphotCount = snaphotMin + snaphotCount > snaphotMax ? 0 : snaphotCount;
+                saveSnapshoCount(snaphotCount);
+            }
 
             $.ajax({
-               url: 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=10',
-               dataType:'jsonp'
+                url: url,
+                dataType: 'jsonp',
+                jsonpCallback: 'jsonpFn'
             }).done(function(data) {
-                var list = data.response.results,
-                    tmpA,
-                    tmpB;
+                var list = data.response.results;
 
                 list = list.map(simplify);
-                /*
-                if (_.random(0,2) === 1) {
-                    list.splice(5,0, list.splice(8,1)[0]);
-                }
-                */
-
                 defer.resolve(list);
             });
 
@@ -192,6 +208,9 @@
         }
 
         function init() {
+            if (useShaphots) {
+                snaphotCount = loadSnapshoCount();
+            }
             setTimeout(renderUpdate, render(loadList()) ? 1000 : 0);
         }
 
