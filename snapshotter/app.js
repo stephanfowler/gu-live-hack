@@ -5,7 +5,8 @@ var http = require('http'),
     count = 0,
     prev;
 
-    url = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=10&callback=jsonpFn';
+    //url = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=10&callback=jsonpFn';
+    url = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&page-size=10&callback=jsonpFn';
 
 function save(index, data) {
     fs.writeFile("data/" + index, data, function(err) {
@@ -35,7 +36,7 @@ function fetch() {
             }
 
             if (count < max) {
-                setTimeout(fetch, 2000)
+                setTimeout(fetch, 10000)
             }
         });
     }).on('error', function(e) {
