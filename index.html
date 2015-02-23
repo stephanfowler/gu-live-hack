@@ -12,29 +12,34 @@
         .items div { 
             box-sizing: border;
             width: 100%;
-            padding-left: 5px;
-            border-top: 1px solid #ddd;
-            background: #fff;
+            padding-left: 10px;
+            background: #eee;
             overflow: hidden;
             white-space: nowrap;
             position: absolute;
-            top: -27px;
+            top: -30px;
             left: 0;
             transition: all 1s ease-in-out;
             color: #000;
+            z-index: 1;
+            border-top: 3px solid #fff;
         }
         .items div.new {
             background: #C5E1A5;
         }
         .items div.rising {
-            background: #FFD180;
+            z-index: 2;
+            background: #EF9A9A;
+        }
+        .items div.falling {
+            z-index: 2;
+        }
+        .items div.deleted {
+            opacity: 0;
         }
         .items div a {
             color: #000;
             text-decoration: none;
-        }
-        .items div.falling a {
-            color: #999;
         }
 
     </style>
@@ -50,137 +55,148 @@
     </style><![endif]-->
 
     <script>
-        $(function() {
-            var template = _.template('<div id="<%= id %>"><a href="<%= webUrl %>"><%= webTitle %></a></div>'),
-                $items = $(".items");
+        var template = _.template('<div id="<%= id %>"><a href="<%= webUrl %>"><%= webTitle %></a></div>'),
+            $items = $(".items");
 
-            function render(content) {
-                if (content) {
-                    $items.html(content.map(template).join(''));
-                    setPositions(getDomList());
+        function getDomList() {
+            return _.map($('div', $items));
+        }
+
+        function getDomMap() {
+            return _.reduce(getDomList(), function(domMap, el, i) {
+                domMap[el.id] = el;
+                return domMap;
+            }, {});
+        }
+
+        function prepareDom() {
+            getDomList().forEach(function(el, i) {
+                if (el.deleted) {
+                    $(el).remove();
+                } else {
+                    $(el).removeClass();
                 }
-            }
+            })
+        }
 
-            function getDomList() {
-                return _.map($('div', $items));
-            }
+        function setPosition(el, i) {
+            $(el).css('top', i * 30 );
+            el.position = i;
+        }
 
-            function getDomMap() {
-                return _.reduce(getDomList(), function(domMap, el, i) {
-                    el.position = i;
-                    domMap[el.id] = el;
-                    return domMap;
-                }, {});
-            }
+        function setDeleted(el) {
+            $(el).addClass('deleted');
+            el.deleted = true;
+        }
 
-            function prepareDom() {
-                getDomList().forEach(function(el, i) {
-                    clearClasses(el);
-                    setZindex(el, i)
-                })
-            }
+        // Workaround for Webkit bug: force scroll height to be recomputed after the transition ends, not only when it starts
+        $items.on("webkitTransitionEnd", function () {
+            $(this).hide().offset();
+            $(this).show();
+        });
 
-            function setPosition(el, i) {
-                $(el).css('top', i * 27 );
-            }
+        function simplify(article) {
+            return _.pick(article, ['id', 'webTitle', 'webUrl', 'tags']);
+        }
 
-            function setPositions(list) {
-                list.forEach(setPosition);
-            }
+        function loadList() {
+            var state = window.localStorage.getItem('gu.live.state');
 
-            function setZindex(el, i) {
-                $(el).css('z-index', i + 1);
-            }
+            state = state && JSON.parse(state);
+            state = _.isArray(state) && state;
+            return state;
+        }
 
-            function clearClasses(el) {
-                $(el).removeClass();
-            }
+        function saveList(list) {
+            window.localStorage.setItem('gu.live.state', JSON.stringify(list));
+        }
 
-            // Workaround for Webkit bug: force scroll height to be recomputed after the transition ends, not only when it starts
-            $items.on("webkitTransitionEnd", function () {
-                $(this).hide().offset();
-                $(this).show();
+        function clone(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+
+        function fetchList() {
+            var defer = new $.Deferred();;
+
+            $.ajax({
+               url: 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=10',
+               dataType:'jsonp'
+            }).done(function(data) {
+                var list = data.response.results,
+                    tmpA,
+                    tmpB;
+
+                list = list.map(simplify);
+                /*
+                if (_.random(0,2) === 1) {
+                    list.splice(5,0, list.splice(8,1)[0]);
+                }
+                */
+
+                defer.resolve(list);
             });
 
-            function simplify(article) {
-                return _.pick(article, ['id', 'webTitle', 'webUrl', 'tags']);
+            return defer.promise();
+        }
+
+        function render(content) {
+            if (content) {
+                $items.html(content.map(template).join(''));
+                getDomList().forEach(setPosition);
+                return true;
             }
+        }
 
-            function loadList() {
-                var state = window.localStorage.getItem('gu.live.state');
+        function renderUpdate() {
+            fetchList().done(function(list) {
+                var domMap = getDomMap(),
+                    version = new Date().getTime();
 
-                state = state && JSON.parse(state);
-                state = _.isArray(state) && state;
-                return state;
-            }
+                if (_.isEmpty(domMap)) {
+                    render(list);
 
-            function saveList(list) {
-                window.localStorage.setItem('gu.live.state', JSON.stringify(list));
-            }
+                } else {
+                    _.chain(list)
+                        .forEach(function(article, index) {
+                            var el = domMap[article.id];
 
-            function fetchList() {
-                var defer = new $.Deferred();;
+                            if (!el) {
+                                el = $(template(article)).addClass('new').appendTo($items)                                
+                            } else if (index < el.position) {
+                                $(el).addClass('rising');
+                            } else if (index > el.position + 1) {
+                                $(el).addClass('falling');
+                            }
 
-                $.ajax({
-                   url: 'http://content.guardianapis.com/search?api-key=test&show-tags=all&page-size=14',
-                   dataType:'jsonp'
-                }).done(function(data) {
-                    var list = data.response.results;
+                            el.version = version;
+                            setTimeout(function() {
+                                setPosition(el, index)
+                            }, 0);
+                        })
+                        .value();
 
-                    list = _.shuffle(list);
-                    defer.resolve(list.slice(0, 12).map(simplify));
-                });
+                    _.chain(domMap)
+                        .forEach(function(el, id) {
+                            if (el.version !== version) {
+                                setDeleted(el);
+                                delete domMap[id];
+                            }
+                        })
+                        .value();
+                }
 
-                return defer.promise();
-            }
+                saveList(list);
+                setTimeout(prepareDom, 3000);
+                setTimeout(renderUpdate, 4000);
+            });
+        }
 
-            function init() {
-                render(loadList());
+        function init() {
+            setTimeout(renderUpdate, render(loadList()) ? 1000 : 0);
+        }
 
-                fetchList().done(function(list) {
-                    var domMap = getDomMap(),
-                        version = new Date().getTime();
+        init();
 
-                    if (_.isEmpty(domMap)) {
-                        render(list);
-
-                    } else {
-                        prepareDom();
-
-                        _.chain(list)
-                            .forEach(function(article, index) {
-                                var el = domMap[article.id];
-
-                                if (!el) {
-                                    el = $(template(article)).addClass('new').appendTo($items)                                    
-                                } else if (index < el.position) {
-                                    $(el).addClass('rising');
-                                } else if (index > el.position) {
-                                    $(el).addClass('falling');
-                                }
-                                el.version = version;
-                                setTimeout(function() {
-                                    setPosition(el, index)
-                                }, 0);
-                            })
-                            .value();
-
-                        _.chain(domMap)
-                            .forEach(function(el, id) {
-                                if (el.version !== version) {
-                                    $(el).remove();
-                                    delete domMap[id];
-                                }
-                            })
-                            .value();
-                    }
-
-                    saveList(list);
-                });
-            }
-
-            init();
-        });
     </script>
 </body>
 </html>
