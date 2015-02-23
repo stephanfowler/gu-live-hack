@@ -55,18 +55,25 @@
     </style><![endif]-->
 
     <script>
-        var capi = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=10',
+        var refreshSecs = 4,
+            capi = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=10',
             template = _.template('<div id="<%= id %>"><a href="<%= webUrl %>"><%= webTitle %></a></div>'),
             $items = $(".items"),
 
             useShaphots = window.location.hash === "#snapshots",
             snaphotBase = 'http://stephanfowler.com/gu-live-hack/snapshotter/data/',
             snaphotMin = 100,
-            snaphotMax = 110,
+            snaphotMax = 120,
             snaphotCount = 0,
 
             storageKeyState = 'gu.live.state',
             storageKeySnapshotCount = 'gu.live.snapshotCount';
+
+        // Workaround for Webkit bug: force scroll height to be recomputed after the transition ends, not only when it starts
+        $items.on("webkitTransitionEnd", function () {
+            $(this).hide().offset();
+            $(this).show();
+        });
 
         function getDomList() {
             return _.map($('div', $items));
@@ -79,7 +86,7 @@
             }, {});
         }
 
-        function prepareDom() {
+        function garbageCollect() {
             getDomList().forEach(function(el, i) {
                 if (el.deleted) {
                     $(el).remove();
@@ -98,12 +105,6 @@
             $(el).addClass('deleted');
             el.deleted = true;
         }
-
-        // Workaround for Webkit bug: force scroll height to be recomputed after the transition ends, not only when it starts
-        $items.on("webkitTransitionEnd", function () {
-            $(this).hide().offset();
-            $(this).show();
-        });
 
         function simplify(article) {
             return _.pick(article, ['id', 'webTitle', 'webUrl', 'tags']);
@@ -150,9 +151,12 @@
 
                 list = list.map(simplify);
                 defer.resolve(list);
+            }).fail(function() {
+                console.log(1111)
+                defer.reject();
             });
 
-            return defer.promise();
+            return defer;
         }
 
         function render(content) {
@@ -202,15 +206,14 @@
                 }
 
                 saveList(list);
-                setTimeout(prepareDom, 3000);
-                setTimeout(renderUpdate, 4000);
-            });
+                setTimeout(garbageCollect, refreshSecs * 500);
+            })
+
+            setTimeout(renderUpdate, refreshSecs * 1000);
         }
 
         function init() {
-            if (useShaphots) {
-                snaphotCount = loadSnapshoCount();
-            }
+            snaphotCount = useShaphots ? loadSnapshoCount() : 0;
             setTimeout(renderUpdate, render(loadList()) ? 1000 : 0);
         }
 
