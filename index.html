@@ -3,33 +3,62 @@
 <head>
     <title></title>
     <style>
-        body { font-family: Arial; overflow: hidden; }
+        body {
+            font-family: Arial;
+            overflow: hidden;
+            margin: 0;
+        }
+        .header {
+            color: #999;
+            background: #fff;
+            line-height: 22px;
+            height: 29px;
+            z-index: 3;
+            position: absolute;
+            top: 0;
+            width: 100%;
+            left: 0;
+            border-bottom: 1px solid #ccc;
+        }
         .items { 
-            font-size: 14px;
-            line-height: 27px;
+            margin-top: 30px;
+            position: relative;
+            font-size: 13px;
+            line-height: 23px;
             height: 330px;
         }
         .items div { 
             box-sizing: border;
+            height: 27px;
             width: 100%;
-            padding-left: 10px;
-            background: #eee;
             overflow: hidden;
             white-space: nowrap;
             position: absolute;
-            top: -30px;
+            background: #ffffff;
+            top: -29px;
             left: 0;
             transition: all 1s ease-in-out;
-            color: #000;
             z-index: 1;
-            border-top: 3px solid #fff;
+            border-top: 1px solid #ccc;
+            text-overflow: ellipsis;
+        }
+        .items div a {
+            color: #999999;
+            text-decoration: none;
+            transition: all 1s ease-in-out;
         }
         .items div.new {
-            background: #C5E1A5;
+            border-color: #005689;
+        }
+        .items div.new a {
+            color: #005689;
         }
         .items div.rising {
             z-index: 2;
-            background: #EF9A9A;
+            border-color: #b51800;
+        }
+        .items div.rising a {
+            color: #b51800;
         }
         .items div.falling {
             z-index: 2;
@@ -37,17 +66,15 @@
         .items div.deleted {
             opacity: 0;
         }
-        .items div a {
-            color: #000;
-            text-decoration: none;
-        }
 
     </style>
     <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
     <script src="libs/lodash.js"></script>
 </head>
 <body>
-    <ul class="items"></ul>
+    
+    <div class="header">Guardian Live</div>
+    <div class="items"></div>
 
     <!--[if lte IE 9]><style type="text/css">
     /* Old IE doesn't support CSS transform or transitions */
@@ -55,7 +82,7 @@
     </style><![endif]-->
 
     <script>
-        var refreshSecs = 4,
+        var refreshSecs = 10,
             capi = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=10',
             template = _.template('<div id="<%= id %>"><a href="<%= webUrl %>"><%= webTitle %></a></div>'),
             $items = $(".items"),
@@ -97,7 +124,7 @@
         }
 
         function setPosition(el, i) {
-            $(el).css('top', i * 30 );
+            $(el).css('top', i * 29 );
             el.position = i;
         }
 
@@ -172,6 +199,8 @@
                 var domMap = getDomMap(),
                     version = new Date().getTime();
 
+                garbageCollect();
+
                 if (_.isEmpty(domMap)) {
                     render(list);
 
@@ -206,10 +235,9 @@
                 }
 
                 saveList(list);
-                setTimeout(garbageCollect, refreshSecs * 500);
+                setTimeout(renderUpdate, refreshSecs * 1000);
             })
 
-            setTimeout(renderUpdate, refreshSecs * 1000);
         }
 
         function init() {
