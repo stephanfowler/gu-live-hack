@@ -2,7 +2,7 @@
     border: 0;
     float:  left;
     clear: left;
-    width:  230px;
+    width: 100%;
     height: 300px;
-    margin-top: 15px;
+    margin: 15px 0 30px 0;
 "></iframe>
