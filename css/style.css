@@ -1,0 +1,67 @@
+body {
+    font-family: "Guardian Egyptian Web","Guardian Text Egyptian Web",Georgia,serif;
+    overflow: hidden;
+    margin: 0;
+}
+.header {
+    line-height: 22px;
+    z-index: 3;
+    position: absolute;
+    top: 0;
+    width: 100%;
+    left: 0;
+    padding-top: 0.25rem;
+    padding-bottom: 1rem;
+    font-size: 16px;
+    background: #fff;
+    font-weight: 900;
+    border-top: 0.0625rem solid #dcdcdc;
+    border-bottom: 0.0625rem solid #dcdcdc;
+}
+.items { 
+    margin-top: 44px;
+    position: relative;
+    font-size: 14px;
+    line-height: 22px;
+    height: 330px;
+}
+.items div { 
+    box-sizing: border;
+    height: 27px;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    position: absolute;
+    background: #ffffff;
+    top: -29px;
+    left: 0;
+    transition: all 1s ease-in-out;
+    z-index: 1;
+    border-top: 1px solid #ccc;
+    text-overflow: ellipsis;
+}
+.items div a {
+    color: rgb(51, 51, 51);
+    text-decoration: none;
+    transition: all 1s ease-in-out;
+}
+.items div.new {
+    border-color: #005689;
+}
+.items div.new a {
+    color: #005689;
+}
+.items div.rising {
+    z-index: 2;
+    border-color: #b51800;
+}
+.items div.rising a {
+    color: #b51800;
+}
+.items div.falling {
+    z-index: 2;
+}
+.items div.deleted {
+    opacity: 0;
+}
+

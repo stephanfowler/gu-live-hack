@@ -1,73 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title></title>
-    <style>
-        body {
-            font-family: Arial;
-            overflow: hidden;
-            margin: 0;
-        }
-        .header {
-            color: #999;
-            background: #fff;
-            line-height: 22px;
-            height: 29px;
-            z-index: 3;
-            position: absolute;
-            top: 0;
-            width: 100%;
-            left: 0;
-            border-bottom: 1px solid #ccc;
-        }
-        .items { 
-            margin-top: 30px;
-            position: relative;
-            font-size: 13px;
-            line-height: 23px;
-            height: 330px;
-        }
-        .items div { 
-            box-sizing: border;
-            height: 27px;
-            width: 100%;
-            overflow: hidden;
-            white-space: nowrap;
-            position: absolute;
-            background: #ffffff;
-            top: -29px;
-            left: 0;
-            transition: all 1s ease-in-out;
-            z-index: 1;
-            border-top: 1px solid #ccc;
-            text-overflow: ellipsis;
-        }
-        .items div a {
-            color: #999999;
-            text-decoration: none;
-            transition: all 1s ease-in-out;
-        }
-        .items div.new {
-            border-color: #005689;
-        }
-        .items div.new a {
-            color: #005689;
-        }
-        .items div.rising {
-            z-index: 2;
-            border-color: #b51800;
-        }
-        .items div.rising a {
-            color: #b51800;
-        }
-        .items div.falling {
-            z-index: 2;
-        }
-        .items div.deleted {
-            opacity: 0;
-        }
-
-    </style>
+    <title>Guardian Live</title>
+    <link rel="stylesheet" href="css/fonts.css"></style>
+    <link rel="stylesheet" href="css/style.css"></style>
     <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
     <script src="libs/lodash.js"></script>
 </head>
