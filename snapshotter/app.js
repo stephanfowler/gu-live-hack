@@ -1,7 +1,8 @@
 var http = require('http'),
     fs = require('fs'),
     
-    pageSize = 10,
+    pageSize = 100,
+    visibleSize = 10,
     max = 100,
     count = 0,
     idsPrev;
@@ -50,7 +51,7 @@ function fetch() {
             var ids;
 
             ids = (body || '').replace(/^jsonpFn\(/, '').replace(/\)$/, '');                
-            ids = (((JSON.parse(ids) || {}).response || {}).results || []).map(function(a) { return a.id });
+            ids = (((JSON.parse(ids) || {}).response || {}).results || []).slice(0, visibleSize).map(function(a) { return a.id });
 
             if (ids.length &&
                     !haveSameOrder(ids, idsPrev) &&
