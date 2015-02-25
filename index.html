@@ -20,7 +20,7 @@
     <script>
         var refreshSecs = 10,
             capi = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=10',
-            template = _.template('<div id="<%= id %>"><a href="<%= webUrl %>"><%= webTitle %></a></div>'),
+            template = _.template('<div id="<%= id %>"><a target="_top" href="<%= webUrl %>"><%= webTitle %></a></div>'),
             $items = $(".items"),
 
             useShaphots = window.location.hash === "#snapshots",
