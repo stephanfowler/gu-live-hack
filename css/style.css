@@ -1,7 +1,7 @@
 body {
     font-family: "Guardian Egyptian Web","Guardian Text Egyptian Web",Georgia,serif;
     overflow: hidden;
-    margin: 50px;
+    margin: 0;
 }
 .header {
     line-height: 22px;
