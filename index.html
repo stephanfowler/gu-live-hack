@@ -18,7 +18,7 @@
     </style><![endif]-->
 
     <script>
-        var listLength = 10,
+        var listLength = 12,
             refreshSecs = 4,
             capi = 'http://content.guardianapis.com/search?api-key=gnm-hackday&show-tags=all&order-by=newest&use-date=last-modified&page-size=' + listLength,
 
@@ -32,7 +32,7 @@
 
             useShaphots = window.location.hash === "#snapshots",
             snaphotBase = 'http://stephanfowler.com/gu-live-hack/snapshotter/data/',
-            snaphotMin = 100,
+            snaphotMin = 110,
             snaphotMax = 150,
             snaphotCount = 0,
 
@@ -46,7 +46,8 @@
         });
 
         function getDomList() {
-            return _.map($('div', $items));
+            var list = _.map($('div', $items));
+            return list.length ? list : null;
         }
 
         function asDomMap(domList) {
@@ -57,7 +58,7 @@
         }
 
         function cleanUpDom() {
-            getDomList().forEach(function(el, i) {
+            _.forEach(getDomList(), function(el, i) {
                 if (el.deleted) {
                     $(el).remove();
                 } else {
@@ -67,12 +68,12 @@
         }
 
         function setPosition(el, i) {
-            $(el).css('top', i * 29 );
+            $(el).css('top', i * 30 );
             el.position = i;
         }
 
         function setPositions(list) {
-            list.forEach(setPosition);
+            _.forEach(list, setPosition);
         }
 
         function markForDeletion(el) {
@@ -138,7 +139,7 @@
         }
 
         function areVeryDifferent(a, b) {
-            return _.intersection(_.pluck(a, 'id'), _.pluck(b, 'id')).length <= 2;
+            return _.intersection(_.pluck(a, 'id'), _.pluck(b, 'id')).length === 0;
         }
 
         function render(content) {
@@ -149,23 +150,30 @@
             }
         }
 
-        function renderUpdate() {
+        function renderUpdate(isInitial) {
             fetchList().done(function(list) {
-                var oldList = getDomList(),
-                    oldMap = asDomMap(oldList),
-                    version = new Date().getTime(),
-                    domList = [];
+                var oldList = loadList(),
+                    oldDomList = getDomList(),
+                    newDomList = [];
+                    oldDomMap = asDomMap(oldDomList),
+                    version = new Date().getTime();
 
-                if (_.isEmpty(oldMap) || areVeryDifferent(list, oldList)) {
+                if (!oldList || areVeryDifferent(oldList, list)) {
+                    console.log(111)
                     render(list);
                     saveList(list);
 
+                } else  if (isInitial) {
+                    console.log(222)
+                    render(oldList);
+
                 } else if (areDifferent(list, oldList)) {
+                    console.log(333)
                     cleanUpDom();
 
                     _.chain(list)
                         .forEach(function(article, index) {
-                            var el = oldMap[article.id];
+                            var el = oldDomMap[article.id];
 
                             if (!el) {
                                 el = $(template(article)).addClass('new').appendTo($items)                                
@@ -176,15 +184,15 @@
                             }
 
                             el.version = version;
-                            domList.push(el);
+                            newDomList.push(el);
                         })
                         .value();
 
                     setTimeout(function() {
-                        setPositions(domList);
+                        setPositions(newDomList);
                     });
 
-                    _.chain(oldMap)
+                    _.chain(oldDomMap)
                         .filter(function(el) { return el.version !== version; })
                         .forEach(markForDeletion)
                         .value();
@@ -192,14 +200,14 @@
                     saveList(list);
                 }
 
-                setTimeout(renderUpdate, refreshSecs * 1000);
+                setTimeout(renderUpdate, (isInitial ? 1 : refreshSecs) * 1000);
             })
 
         }
 
         function init() {
             snaphotCount = useShaphots ? loadSnapshoCount() : 0;
-            setTimeout(renderUpdate, render(loadList()) ? 1000 : 0);
+            renderUpdate(true);
         }
 
         init();
