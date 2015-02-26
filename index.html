@@ -56,7 +56,7 @@
             }, {});
         }
 
-        function garbageCollect() {
+        function cleanUpDom() {
             getDomList().forEach(function(el, i) {
                 if (el.deleted) {
                     $(el).remove();
@@ -75,7 +75,7 @@
             list.forEach(setPosition);
         }
 
-        function setDeleted(el) {
+        function markForDeletion(el) {
             $(el).addClass('deleted');
             el.deleted = true;
         }
@@ -85,7 +85,7 @@
         }
 
         function loadList() {
-            var state = window.localStorage.getItem(storageKeyState);
+            var state = window.sessionStorage.getItem(storageKeyState);
 
             state = state && JSON.parse(state);
             state = _.isArray(state) && state;
@@ -93,16 +93,16 @@
         }
 
         function saveList(list) {
-            window.localStorage.setItem(storageKeyState, JSON.stringify(list));
+            window.sessionStorage.setItem(storageKeyState, JSON.stringify(list));
         }
 
         function loadSnapshoCount() {
-            var count = window.localStorage.getItem(storageKeySnapshotCount) || 0;
+            var count = window.sessionStorage.getItem(storageKeySnapshotCount) || 0;
             return parseInt(count, 10);
         }
 
         function saveSnapshoCount(count) {
-            window.localStorage.setItem(storageKeySnapshotCount, count + '');
+            window.sessionStorage.setItem(storageKeySnapshotCount, count + '');
         }
 
         function fetchList() {
@@ -161,7 +161,7 @@
                     saveList(list);
 
                 } else if (areDifferent(list, oldList)) {
-                    garbageCollect();
+                    cleanUpDom();
 
                     _.chain(list)
                         .forEach(function(article, index) {
@@ -186,7 +186,7 @@
 
                     _.chain(oldMap)
                         .filter(function(el) { return el.version !== version; })
-                        .forEach(setDeleted)
+                        .forEach(markForDeletion)
                         .value();
 
                     saveList(list);
