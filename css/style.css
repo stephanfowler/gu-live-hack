@@ -31,8 +31,6 @@ body {
     box-sizing: border;
     height: 27px;
     width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
     position: absolute;
     background: #ffffff;
     top: -29px;
@@ -40,39 +38,45 @@ body {
     transition: all 1s ease-in-out;
     z-index: 1;
     border-top: 1px solid #ccc;
-    text-overflow: ellipsis;
 }
 
 .items div .label-rising,
 .items div .label-new {
     box-sizing: border-box;
     position: absolute;
-    left: 0px;
+    right: 0;
+    top: 0;
     opacity: 0;
     font-family: 'Guardian Text Sans Web', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif;;
     font-size: 9px;
-    width: 45px;
+    line-height: 16px;
+    padding: 0 3px 0 4px;
     color: #fff;
     text-transform: uppercase;
     transition: all 1s ease-in-out;
 } 
 
 .items div a {
-    position: absolute;
-    left: 47px;
+    display: block;
+    padding-right: 0px;
     color: rgb(51, 51, 51);
     text-decoration: none;
     transition: all 1s ease-in-out;
     background: #fff;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 .items div.new {
     border-color: #b51800;
 }
 .items div.new .label-new {
-    color: #b51800;
+    background: #b51800;
+    color: #fff;
     opacity: 1;
 } 
 .items div.new a {
+    padding-right: 30px;
     color: #b51800;
 }
 
@@ -82,10 +86,12 @@ body {
     z-index: 2;
 }
 .items div.rising .label-rising {
-    color: #005689;
+    background: #005689;
+    color: #fff;
     opacity: 1;
 } 
 .items div.rising a {
+    padding-right: 50px;
     color: #005689;
 }
 
