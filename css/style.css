@@ -17,6 +17,7 @@ body {
     font-weight: 900;
     border-top: 0.0625rem solid #dcdcdc;
     border-bottom: 0.0625rem solid #dcdcdc;
+    -webkit-font-smoothing: antialiased;
 }
 .items { 
     margin-top: 44px;
