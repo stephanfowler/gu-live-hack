@@ -18,9 +18,49 @@
     </style><![endif]-->
 
     <script>
-        var listLength = 12,
-            refreshSecs = 9,
-            capi = 'http://content.guardianapis.com/search?api-key=gnm-hackday&show-tags=all&order-by=newest&use-date=last-modified&page-size=' + listLength,
+        var toneWhitelist = [
+                "timelines",
+                "comment",
+                //"help",
+                //"thirdpartyventures",
+                //"sponsoredfeatures",
+                "extract",
+                "matchreports",
+                "albumreview",
+                "features",
+                "obituaries",
+                "minutebyminute",
+                "editorials",
+                "interview",
+                //"recipes",
+                //"readeroffers",
+                "performances",
+                //"extracompetitions",
+                //"resource",
+                //"letters",
+                "reviews",
+                "profiles",
+                "blog",
+                "livereview",
+                //"extraoffers",
+                "analysis",
+                "q-and-as",
+                //"advertisement-features",
+                //"event-descriptions",
+                //"childrens-user-reviews"
+                "news"
+            ],
+
+            listLength = 12,
+
+            useShaphots = window.location.hash === "#snapshots",
+            refreshSecs = useShaphots ? 9 : 3,
+
+            capi = 'http://content.guardianapis.com/search' + 
+                    '?api-key=gnm-hackday' + 
+                    '&use-date=last-modified' + 
+                    '&page-size=' + listLength + 
+                    '&tag=' + toneWhitelist.map(function(t) { return 'tone/' + t; }).join('|'),
 
             template = _.template('<div id="<%= id %>">' + 
                     '<span class="label-new">new</span>' +
@@ -30,7 +70,6 @@
 
             $items = $(".items"),
 
-            useShaphots = window.location.hash === "#snapshots",
             snaphotBase = 'http://stephanfowler.com/gu-live-hack/snapshotter/data/',
             snaphotMin = 110,
             snaphotMax = 150,
