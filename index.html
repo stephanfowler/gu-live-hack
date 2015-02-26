@@ -18,8 +18,9 @@
     </style><![endif]-->
 
     <script>
-        var refreshSecs = 3,
-            capi = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=10',
+        var listLength = 10,
+            refreshSecs = 4,
+            capi = 'http://content.guardianapis.com/search?api-key=gnm-hackday&show-tags=all&order-by=newest&use-date=last-modified&page-size=' + listLength,
 
             template = _.template('<div id="<%= id %>">' + 
                     '<span class="label-new">new</span>' +
@@ -48,8 +49,8 @@
             return _.map($('div', $items));
         }
 
-        function getDomMap() {
-            return _.reduce(getDomList(), function(domMap, el, i) {
+        function asDomMap(domList) {
+            return _.reduce(domList, function(domMap, el, i) {
                 domMap[el.id] = el;
                 return domMap;
             }, {});
@@ -68,6 +69,10 @@
         function setPosition(el, i) {
             $(el).css('top', i * 29 );
             el.position = i;
+        }
+
+        function setPositions(list) {
+            list.forEach(setPosition);
         }
 
         function setDeleted(el) {
@@ -129,35 +134,38 @@
         }
 
         function areDifferent(a, b) {
-            return JSON.stringify(a) !== JSON.stringify(b);
+            return JSON.stringify(_.pluck(a, 'id')) !== JSON.stringify(_.pluck(b, 'id'));
+        }
+
+        function areVeryDifferent(a, b) {
+            return _.intersection(_.pluck(a, 'id'), _.pluck(b, 'id')).length <= 2;
         }
 
         function render(content) {
             if (content) {
                 $items.html(content.map(template).join(''));
-                getDomList().forEach(setPosition);
+                setPositions(getDomList());
                 return true;
             }
         }
 
         function renderUpdate() {
             fetchList().done(function(list) {
-                var domMap,
-                    version;
+                var oldList = getDomList(),
+                    oldMap = asDomMap(oldList),
+                    version = new Date().getTime(),
+                    domList = [];
 
-                domMap = getDomMap();
-                version = new Date().getTime();
-
-                if (_.isEmpty(domMap)) {
+                if (_.isEmpty(oldMap) || areVeryDifferent(list, oldList)) {
                     render(list);
                     saveList(list);
 
-                } else if (areDifferent(_.pluck(list, 'id'), _.pluck(loadList(), 'id'))) {
+                } else if (areDifferent(list, oldList)) {
                     garbageCollect();
 
                     _.chain(list)
                         .forEach(function(article, index) {
-                            var el = domMap[article.id];
+                            var el = oldMap[article.id];
 
                             if (!el) {
                                 el = $(template(article)).addClass('new').appendTo($items)                                
@@ -168,19 +176,17 @@
                             }
 
                             el.version = version;
-                            setTimeout(function() {
-                                setPosition(el, index)
-                            }, 0);
+                            domList.push(el);
                         })
                         .value();
 
-                    _.chain(domMap)
-                        .forEach(function(el, id) {
-                            if (el.version !== version) {
-                                setDeleted(el);
-                                delete domMap[id];
-                            }
-                        })
+                    setTimeout(function() {
+                        setPositions(domList);
+                    });
+
+                    _.chain(oldMap)
+                        .filter(function(el) { return el.version !== version; })
+                        .forEach(setDeleted)
                         .value();
 
                     saveList(list);
