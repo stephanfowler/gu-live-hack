@@ -1,13 +1,53 @@
 var http = require('http'),
     fs = require('fs'),
     
-    pageSize = 100,
-    visibleSize = 10,
+    listLength = 12,
+    visibleSize = 12,
     max = 100,
     count = 0,
-    idsPrev;
+    idsPrev,
 
-    url = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=' + pageSize + '&callback=jsonpFn';
+    toneWhitelist = [
+        "timelines",
+        "comment",
+        //"help",
+        //"thirdpartyventures",
+        //"sponsoredfeatures",
+        //"extract",
+        "matchreports",
+        "albumreview",
+        "features",
+        "obituaries",
+        "minutebyminute",
+        "editorials",
+        "interview",
+        //"recipes",
+        //"readeroffers",
+        "performances",
+        //"extracompetitions",
+        //"resource",
+        //"letters",
+        "reviews",
+        "profiles",
+        "blog",
+        "livereview",
+        //"extraoffers",
+        "analysis",
+        "q-and-as",
+        //"advertisement-features",
+        //"event-descriptions",
+        //"childrens-user-reviews"
+        "news"
+    ],
+
+    url = 'http://content.guardianapis.com/search' + 
+            '?api-key=gnm-hackday' + 
+            '&use-date=last-modified' + 
+            '&page-size=' + listLength + 
+            '&tag=' + toneWhitelist.map(function(t) { return 'tone/' + t; }).join('|') +
+            '&callback=jsonpFn';
+
+    //url = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&use-date=last-modified&page-size=' + listLength + '&callback=jsonpFn';
     //url = 'http://content.guardianapis.com/search?api-key=test&show-tags=all&order-by=newest&page-size=10&callback=jsonpFn';
 
 function save(index, data) {
