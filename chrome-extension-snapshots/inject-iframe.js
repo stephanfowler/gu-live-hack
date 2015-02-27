@@ -52,6 +52,8 @@ if (collapsePath(window.location.pathname) === 'uk') {
 }
 */
 
+console.log(url)
+
 if (articleEl) {
     articleEl.insertAdjacentHTML('beforebegin', '<iframe src="' + url + '" style="border: 0; float:  left; clear: left; width: 100%; height: 300px; margin: 0 0 72px 0;"></iframe>')
 }
