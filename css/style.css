@@ -19,6 +19,10 @@ body {
     border-bottom: 0.0625rem solid #dcdcdc;
     -webkit-font-smoothing: antialiased;
 }
+.header:first-letter {
+    text-transform: uppercase;
+}
+
 .items { 
     margin-top: 44px;
     position: relative;

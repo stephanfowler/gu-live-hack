@@ -53,7 +53,10 @@
 
             listLength = 12,
 
-            useShaphots = window.location.hash === "#snapshots",
+            useShaphots = window.location.hash.indexOf("snapshots") > -1,
+
+            header = window.location.hash.match(/header=(.+)/),
+
             refreshSecs = useShaphots ? 9 : 3,
 
             capi = 'http://content.guardianapis.com/search' + 
@@ -167,7 +170,6 @@
                 list = list.map(simplify);
                 defer.resolve(list);
             }).fail(function() {
-                console.log(1111)
                 defer.reject();
             });
 
@@ -199,16 +201,13 @@
                     version = new Date().getTime();
 
                 if (!oldList || areVeryDifferent(oldList, list)) {
-                    console.log(111)
                     render(list);
                     saveList(list);
 
                 } else  if (isInitial) {
-                    console.log(222)
                     render(oldList);
 
                 } else if (areDifferent(list, oldList)) {
-                    console.log(333)
                     cleanUpDom();
 
                     _.chain(list)
@@ -248,6 +247,10 @@
         function init() {
             snaphotCount = useShaphots ? loadSnapshoCount() : 0;
             renderUpdate(true);
+
+            if (header) {
+                document.querySelector('.header').innerHTML = decodeURIComponent(header[1]);
+            }
         }
 
         init();
