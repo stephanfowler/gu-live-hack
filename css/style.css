@@ -80,18 +80,19 @@ body {
     color: #197caa;
 }
 
+
 .items div.rising {
-    border-color: #005689;
+    border-color: #b51800;
     z-index: 2;
 }
 .items div.rising .label-rising {
-    background: #005689;
+    background: #b51800;
     color: #fff;
     opacity: 1;
 } 
 .items div.rising a {
     padding-right: 50px;
-    color: #005689;
+    color: #b51800;
 }
 
 
