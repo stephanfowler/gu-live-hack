@@ -43,6 +43,7 @@ var http = require('http'),
     url = 'http://content.guardianapis.com/search' + 
             '?api-key=gnm-hackday' + 
             '&use-date=last-modified' + 
+            '&order-by=newest' + 
             '&page-size=' + listLength + 
             '&tag=' + toneWhitelist.map(function(t) { return 'tone/' + t; }).join('|') +
             '&callback=jsonpFn';
@@ -105,7 +106,7 @@ function fetch() {
             }
 
             if (count < max) {
-                setTimeout(fetch, 5000)
+                setTimeout(fetch, 2000)
             }
         });
     }).on('error', function(e) {

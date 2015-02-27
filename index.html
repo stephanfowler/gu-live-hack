@@ -59,13 +59,14 @@
             capi = 'http://content.guardianapis.com/search' + 
                     '?api-key=gnm-hackday' + 
                     '&use-date=last-modified' + 
+                    '&order-by=newest' + 
                     '&page-size=' + listLength + 
                     '&tag=' + toneWhitelist.map(function(t) { return 'tone/' + t; }).join('|'),
 
             template = _.template('<div id="<%= id %>">' + 
                     '<span class="label-new">new</span>' +
                     '<span class="label-rising">updated</span>' +
-                    '<a target="_top" href="http://localhost:9000/<%= id %>"><%= webTitle %></a>' +
+                    '<a target="_top" href="<%= webUrl %>"><%= webTitle %></a>' +
                 '</div>'),
 
             $items = $(".items"),

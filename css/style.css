@@ -68,18 +68,17 @@ body {
     text-overflow: ellipsis;
 }
 .items div.new {
-    border-color: #b51800;
+    border-color: #197caa;
 }
 .items div.new .label-new {
-    background: #b51800;
+    background: #197caa;
     color: #fff;
     opacity: 1;
 } 
 .items div.new a {
     padding-right: 30px;
-    color: #b51800;
+    color: #197caa;
 }
-
 
 .items div.rising {
     border-color: #005689;
