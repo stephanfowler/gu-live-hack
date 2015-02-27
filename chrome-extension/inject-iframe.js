@@ -1,6 +1,6 @@
 console.log('Loading live newsdesk... SNAPSHOTS');
 
-var url = 'http://stephanfowler.com/gu-live-hack/',
+var url = 'http://stephanfowler.com/gu-live-hack/#',
 
     articleEl = document.querySelector('.content__secondary-column .js-mpu-ad-slot'),
     frontEl = document.querySelectorAll('.fc-slice__item'),
