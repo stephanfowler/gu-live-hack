@@ -41,6 +41,7 @@ function collapsePath(t) {
     }
 }
 
+/*
 pathLength = collapsePath(window.location.pathname).split('/').length;
 
 if (collapsePath(window.location.pathname) === 'uk') {
@@ -49,8 +50,7 @@ if (collapsePath(window.location.pathname) === 'uk') {
 } else if (pathLength < 3) {
     url += '&header=' + collapsePath(window.location.pathname) + '%20newsdesk';
 }
-
-console.log(url);
+*/
 
 if (articleEl) {
     articleEl.insertAdjacentHTML('beforebegin', '<iframe src="' + url + '" style="border: 0; float:  left; clear: left; width: 100%; height: 300px; margin: 0 0 72px 0;"></iframe>')
