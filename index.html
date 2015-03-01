@@ -54,35 +54,36 @@
 
             listLength = 12,
 
-            useShaphots = true,
-            //useShaphots = window.location.hash.indexOf("snapshots") > -1,
+            refreshPeriod = 5000,
 
-            header = window.location.hash.match(/header=(.+)/),
-
-            refreshSecs = useShaphots ? 9 : 3,
-
-            capi = 'http://content.guardianapis.com/search' + 
+            capi =  'http://content.guardianapis.com/search' + 
                     '?api-key=gnm-hackday' + 
                     '&use-date=last-modified' + 
                     '&order-by=newest' +
                     '&page-size=' + listLength + 
                     '&tag=' + toneWhitelist.map(function(t) { return 'tone/' + t; }).join('|'),
 
-            template = _.template('<div id="<%= id %>">' + 
+            template = _.template(
+                '<div id="<%= id %>">' + 
                     '<span class="label-new">new</span>' +
                     '<span class="label-rising">updated</span>' +
-                    '<a target="_top" href="<%= webUrl %>"><%- webTitle %></a>' +
+                    '<a target="_top" href="http://www.theguardian.com/<%= id %>"><%- webTitle %></a>' +
                 '</div>'),
 
             $items = $(".items"),
 
+            //useShaphots = true,
+            useShaphots = window.location.hash.indexOf("snapshots") > -1,
+            snaphotCount = useShaphots ? loadSnapshoCount() : 0,
             snaphotBase = 'http://stephanfowler.com/gu-live-hack/snapshotter/data/',
             snaphotMin = 100,
             snaphotMax = 150,
             snaphotCount = 0,
 
             storageKeyState = 'gu.live.state',
-            storageKeySnapshotCount = 'gu.live.snapshotCount';
+            storageKeySnapshotCount = 'gu.live.snapshotCount',
+
+            domMap;
 
         // Workaround for Webkit bug: force scroll height to be recomputed after the transition ends, not only when it starts
         $items.on("webkitTransitionEnd", function () {
@@ -96,14 +97,14 @@
         }
 
         function asDomMap(domList) {
-            return _.reduce(domList, function(domMap, el, i) {
+            return _.reduce(domList, function(domMap, el) {
                 domMap[el.id] = el;
                 return domMap;
             }, {});
         }
 
         function cleanUpDom() {
-            _.forEach(getDomList(), function(el, i) {
+            _.forEach(domMap, function(el, i) {
                 if (el.deleted) {
                     $(el).remove();
                 } else {
@@ -127,19 +128,19 @@
         }
 
         function simplify(article) {
-            return _.pick(article, ['id', 'webTitle', 'webUrl', 'tags']);
+            return _.pick(article, ['id', 'webTitle']);
         }
 
-        function loadList() {
-            var state = window.sessionStorage.getItem(storageKeyState);
+        function load() {
+            var model = window.sessionStorage.getItem(storageKeyState);
 
-            state = state && JSON.parse(state);
-            state = _.isArray(state) && state;
-            return state;
+            model = model && JSON.parse(model);
+            model = _.isArray(model) && model;
+            return model;
         }
 
-        function saveList(list) {
-            window.sessionStorage.setItem(storageKeyState, JSON.stringify(list));
+        function save(model) {
+            window.sessionStorage.setItem(storageKeyState, JSON.stringify(model));
         }
 
         function loadSnapshoCount() {
@@ -151,7 +152,7 @@
             window.sessionStorage.setItem(storageKeySnapshotCount, count + '');
         }
 
-        function fetchList() {
+        function fetchModel() {
             var defer = new $.Deferred(),
                 url = capi;
 
@@ -167,10 +168,11 @@
                 dataType: 'jsonp',
                 jsonpCallback: 'jsonpFn'
             }).done(function(data) {
-                var list = data.response.results;
-
-                list = list.map(simplify);
-                defer.resolve(list);
+                if (data && data.response && _.isArray(data.response.results)) {
+                    defer.resolve(data.response.results.map(simplify));
+                } else {
+                    defer.reject();
+                }
             }).fail(function() {
                 defer.reject();
             });
@@ -178,81 +180,101 @@
             return defer;
         }
 
-        function areDifferent(a, b) {
-            return JSON.stringify(_.pluck(a, 'id')) !== JSON.stringify(_.pluck(b, 'id'));
+        function areIdentical(a, b) {
+            return _.isEqual(_.pluck(a, 'id'), _.pluck(b, 'id'));
         }
 
-        function areVeryDifferent(a, b) {
+        function differCompletely(a, b) {
             return _.intersection(_.pluck(a, 'id'), _.pluck(b, 'id')).length === 0;
         }
 
-        function render(content) {
+        function renderAll(content) {
+            var domList;
+
             if (content) {
                 $items.html(content.map(template).join(''));
-                setPositions(getDomList());
-                return true;
+
+                domList = getDomList();
+                domMap = asDomMap(domList);
+                setPositions(domList);
             }
         }
 
-        function renderUpdate(isInitial) {
-            fetchList().done(function(list) {
-                var oldList = loadList(),
-                    oldDomList = getDomList(),
-                    newDomList = [];
-                    oldDomMap = asDomMap(oldDomList),
-                    version = new Date().getTime();
+        function mutate(oldModel, newModel) {
+            var domList = [],
+                version = new Date().getTime();
 
-                if (!oldList || areVeryDifferent(oldList, list)) {
-                    render(list);
-                    saveList(list);
+            cleanUpDom();
 
-                } else  if (isInitial) {
-                    render(oldList);
+            _.chain(newModel)
+                .forEach(function(article, index) {
+                    var el = domMap[article.id];
 
-                } else if (areDifferent(list, oldList)) {
-                    cleanUpDom();
+                    if (!el) {
+                        el = $(template(article)).addClass('new').appendTo($items);
+                        domMap[article.id] = el;
+                    } else if (index < el.position) {
+                        $(el).addClass('rising');
+                    }
 
-                    _.chain(list)
-                        .forEach(function(article, index) {
-                            var el = oldDomMap[article.id];
+                    el.version = version;
+                    domList.push(el);
+                })
+                .value();
 
-                            if (!el) {
-                                el = $(template(article)).addClass('new').appendTo($items)                                
-                            } else if (index < el.position) {
-                                $(el).addClass('rising');
-                            } else if (index > el.position + 1) {
-                                $(el).addClass('falling');
-                            }
+            _.chain(domMap)
+                .filter(function(el) { return el.version !== version; })
+                .forEach(markForDeletion)
+                .value();
 
-                            el.version = version;
-                            newDomList.push(el);
-                        })
-                        .value();
+            setTimeout(function() {
+                setPositions(domList);
+            });
+        }
 
-                    setTimeout(function() {
-                        setPositions(newDomList);
-                    });
-
-                    _.chain(oldDomMap)
-                        .filter(function(el) { return el.version !== version; })
-                        .forEach(markForDeletion)
-                        .value();
-
-                    saveList(list);
+        function update(oldModel) {
+            fetchModel()
+            .done(function(newModel) {
+                if (differCompletely(oldModel, newModel)) {
+                    renderAll(newModel);
+                    save(newModel);
+                } else if (!areIdentical(oldModel, newModel)) {
+                    mutate(oldModel, newModel);
+                    save(newModel);
                 }
 
-                setTimeout(renderUpdate, (isInitial ? 3 : refreshSecs) * 1000);
+                setTimeout(function() {
+                    update(newModel);
+                }, refreshPeriod);
             })
-
         }
 
         function init() {
-            snaphotCount = useShaphots ? loadSnapshoCount() : 0;
-            renderUpdate(true);
+            fetchModel()
+            .done(function(newModel) {
+                var oldModel = load();
 
-            if (header) {
-                document.querySelector('.header').innerHTML = decodeURIComponent(header[1]);
-            }
+                save(newModel);
+
+                console.log(JSON.stringify(oldModel))
+                console.log(JSON.stringify(newModel))
+                console.log(areIdentical(oldModel, newModel)) 
+                console.log(differCompletely(oldModel, newModel))
+
+                if (!oldModel || differCompletely(oldModel, newModel)) {
+                    renderAll(newModel);
+
+                } else {
+                    renderAll(oldModel);
+                    setTimeout(function() {
+                        mutate(oldModel, newModel);
+                    }, 1000);
+                }
+
+                setTimeout(function() {
+                    update(newModel);
+                }, refreshPeriod);
+            })
         }
 
         init();
