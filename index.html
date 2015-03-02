@@ -64,9 +64,9 @@
                     '&tag=' + toneWhitelist.map(function(t) { return 'tone/' + t; }).join('|'),
 
             template = _.template(
-                '<div id="<%= id %>">' + 
+                '<div>' + 
                     '<span class="label-new">new</span>' +
-                    '<span class="label-rising">updated</span>' +
+                    '<span class="label-updated">updated</span>' +
                     '<a target="_top" href="http://www.theguardian.com/<%= id %>" title="<%- webTitle %>"><%- webTitle %></a>' +
                 '</div>'),
 
@@ -83,39 +83,39 @@
             storageKeyState = 'gu.live.state',
             storageKeySnapshotCount = 'gu.live.snapshotCount',
 
-            domMap;
+            domMap,
+            titlesMap;
 
         // Workaround for Webkit bug: force scroll height to be recomputed after the transition ends, not only when it starts
+        /*
         $items.on("webkitTransitionEnd", function () {
             $(this).hide().offset();
             $(this).show();
         });
+        */
 
         function getDomList() {
             var list = _.map($('div', $items));
             return list.length ? list : null;
         }
 
-        function asDomMap(domList) {
-            return _.reduce(domList, function(domMap, el) {
-                domMap[el.id] = el;
-                return domMap;
-            }, {});
-        }
-
-        function cleanUpDom() {
-            _.forEach(domMap, function(el, i) {
+        function cleanUp() {
+            _.forEach(domMap, function(el, id) {
                 if (el.deleted) {
                     $(el).remove();
+                    delete domMap[id];
+                    delete titlesMap[id];
                 } else {
                     $(el).removeClass();
+                    delete el.reposition;
                 }
             })
         }
 
         function setPosition(el, i) {
-            $(el).css('top', i * 30 );
-            el.position = i;
+            if (_.isUndefined(el.reposition) || el.reposition) {
+                $(el).css('top', i * 30 );
+            }
         }
 
         function setPositions(list) {
@@ -181,49 +181,61 @@
         }
 
         function areIdentical(a, b) {
-            return _.isEqual(_.pluck(a, 'id'), _.pluck(b, 'id'));
+            return _.isEqual(a, b);
         }
 
         function differCompletely(a, b) {
             return _.intersection(_.pluck(a, 'id'), _.pluck(b, 'id')).length === 0;
         }
 
-        function renderAll(content) {
+        function fullRender(content) {
             var domList;
 
-            if (content) {
+            if (_.isArray(content)) {
                 $items.html(content.map(template).join(''));
-
                 domList = getDomList();
-                domMap = asDomMap(domList);
+                domMap = _.zipObject(_.pluck(content, 'id'), domList);
                 setPositions(domList);
+
+                titlesMap = _.reduce(content, function (map, article) {
+                    map[article.id] = article.webTitle;
+                    return map;
+                }, {});
             }
         }
 
-        function mutate(oldModel, newModel) {
-            var domList = [],
-                version = new Date().getTime();
+        function mutateRender(oldModel, newModel) {
+            var domList = [];
 
-            cleanUpDom();
+            cleanUp();
 
             _.chain(newModel)
-                .forEach(function(article, index) {
-                    var el = domMap[article.id];
+                .forEach(function(article, i) {
+                    var id = article.id,
+                        title = article.webTitle,
+                        el = domMap[id];
 
                     if (!el) {
                         el = $(template(article)).addClass('new').appendTo($items);
-                        domMap[article.id] = el;
-                    } else if (index < el.position) {
-                        $(el).addClass('rising');
+                        domMap[id] = el;
+                        titlesMap[id] = title;
+                    } else if (i < el.position) {
+                        $(el).addClass('updated');
                     }
 
-                    el.version = version;
+                    if (titlesMap[id] !== title) {
+                        $('a', el).html(title);
+                        $(el).addClass('updated');
+                    }
+
+                    el.reposition = i !== el.position;
+                    el.position = i;
                     domList.push(el);
                 })
                 .value();
 
             _.chain(domMap)
-                .filter(function(el) { return el.version !== version; })
+                .filter(function(el) { return _.isUndefined(el.reposition); })
                 .forEach(markForDeletion)
                 .value();
 
@@ -236,10 +248,10 @@
             fetchModel()
             .done(function(newModel) {
                 if (differCompletely(oldModel, newModel)) {
-                    renderAll(newModel);
+                    fullRender(newModel);
                     save(newModel);
                 } else if (!areIdentical(oldModel, newModel)) {
-                    mutate(oldModel, newModel);
+                    mutateRender(oldModel, newModel);
                     save(newModel);
                 }
 
@@ -256,13 +268,15 @@
 
                 save(newModel);
 
-                if (!oldModel || differCompletely(oldModel, newModel)) {
-                    renderAll(newModel);
+                if (!oldModel
+                    || areIdentical(oldModel, newModel)
+                    || differCompletely(oldModel, newModel)) {
+                    fullRender(newModel);
 
                 } else {
-                    renderAll(oldModel);
+                    fullRender(oldModel);
                     setTimeout(function() {
-                        mutate(oldModel, newModel);
+                        mutateRender(oldModel, newModel);
                     }, 1000);
                 }
 

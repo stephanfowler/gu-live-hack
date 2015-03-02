@@ -44,7 +44,7 @@ body {
     border-top: 1px solid #ccc;
 }
 
-.items div .label-rising,
+.items div .label-updated,
 .items div .label-new {
     box-sizing: border-box;
     position: absolute;
@@ -85,16 +85,16 @@ body {
 }
 
 
-.items div.rising {
+.items div.updated {
     border-color: #b51800;
     z-index: 2;
 }
-.items div.rising .label-rising {
+.items div.updated .label-updated {
     background: #b51800;
     color: #fff;
     opacity: 1;
 } 
-.items div.rising a {
+items div.updated a {
     padding-right: 50px;
     color: #b51800;
 }
