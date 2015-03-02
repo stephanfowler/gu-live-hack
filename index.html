@@ -57,12 +57,11 @@
 
             refreshPeriod = 5000,
 
-            capi =  'http://content.guardianapis.com/search' + 
-                    '?api-key=gnm-hackday' + 
-                    '&use-date=last-modified' + 
+            capi =  'http://internal.content.guardianapis.com/search' +
+                    '?use-date=last-modified' +
                     '&order-by=newest' +
                     '&page-size=' + listLength + 
-                    '&tag=' + toneWhitelist.map(function(t) { return 'tone/' + t; }).join('|'),
+                    '&tag=' + toneWhitelist.map(function(t) { return 'tone/' + t; }).join('%7C'),
 
             template = _.template(
                 '<div>' + 
