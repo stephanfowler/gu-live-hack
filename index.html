@@ -73,7 +73,7 @@
             $items = $(".items"),
 
             //useShaphots = true,
-            useShaphots = window.location.hash.indexOf("snapshots") > -1,
+            useShaphots = window.location.search.indexOf("snapshots") > -1,
             snaphotCount = useShaphots ? loadSnapshoCount() : 0,
             snaphotBase = 'http://stephanfowler.com/gu-live-hack/snapshotter/data/',
             snaphotMin = 100,
