@@ -53,6 +53,7 @@
             ],
 
             listLength = 12,
+            rowHeightPx = 30,
 
             refreshPeriod = 5000,
 
@@ -113,8 +114,9 @@
         }
 
         function setPosition(el, i) {
+            el.position = i;
             if (_.isUndefined(el.reposition) || el.reposition) {
-                $(el).css('top', i * 30 );
+                $(el).css('top', i * rowHeightPx);
             }
         }
 
@@ -229,7 +231,6 @@
                     }
 
                     el.reposition = i !== el.position;
-                    el.position = i;
                     domList.push(el);
                 })
                 .value();
@@ -266,8 +267,6 @@
             .done(function(newModel) {
                 var oldModel = load();
 
-                save(newModel);
-
                 if (!oldModel
                     || areIdentical(oldModel, newModel)
                     || differCompletely(oldModel, newModel)) {
@@ -279,6 +278,8 @@
                         mutateRender(oldModel, newModel);
                     }, 1000);
                 }
+
+                save(newModel);
 
                 setTimeout(function() {
                     update(newModel);
