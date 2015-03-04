@@ -56,6 +56,7 @@ body {
     line-height: 16px;
     padding: 0 3px 0 4px;
     color: #fff;
+    box-shadow: -3px 6px 7px 5px #fff;
     text-transform: uppercase;
     transition: all 1s ease-in-out;
 } 
@@ -80,10 +81,8 @@ body {
     opacity: 1;
 } 
 .items div.new a {
-    padding-right: 30px;
     color: #197caa;
 }
-
 
 .items div.updated {
     border-color: #b51800;
@@ -94,14 +93,10 @@ body {
     color: #fff;
     opacity: 1;
 } 
-items div.updated a {
-    padding-right: 50px;
+.items div.updated a {
     color: #b51800;
 }
 
-.items div.falling {
-    z-index: 2;
-}
 .items div.deleted {
     opacity: 0;
 }
